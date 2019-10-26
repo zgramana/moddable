@@ -1,0 +1,81 @@
+{
+	"modules": {
+		"*": "$(MODULES)/files/sdmmc/*"
+	},
+	"preload": "sdmmc",
+	"platforms": {
+		"esp": {
+			"modules": {
+				"*": "$(MODULES)/files/sdmmc/esp/*"
+			},
+			"config": {
+				"file": {
+					"root": "/sdcard/"
+				}
+			}
+		},
+		"esp32": {
+			"defines": {
+				"sdCard": {
+					"mosi_pin": 16,
+					"miso_pin": 17,
+					"sclk_pin": 32,
+					"cs_pin": 33,
+					"spi_port": "VSPI_HOST",
+					"hz": 1000000
+				}
+			},
+			"modules": {
+				"*": "$(MODULES)/files/sdmmc/esp32/*"
+			},
+			"config": {
+				"file": {
+					"root": "/sdcard/"
+				}
+			}
+		},
+		"mac": {
+			"modules": {
+				"*": "$(MODULES)/files/sdmmc/mac/*"
+			},
+			"config": {
+				"file": {
+					"root": "/Users/Shared/"
+				}
+			}
+		},
+		"win": {
+			"modules": {
+				"*": "$(MODULES)/files/sdmmc/win/*"
+			},
+			"config": {
+				"file": {
+					"root": "./"
+				}
+			}
+		},
+		"lin": {
+			"modules": {
+				"*": "$(MODULES)/files/sdmmc/lin/*"
+			},
+			"config": {
+				"file": {
+					"root": "/tmp/"
+				}
+			}
+		},
+		"qca4020": {
+			"modules": {
+				"*": "$(MODULES)/files/sdmmc/qca4020/*"
+			},
+			"config": {
+				"file": {
+					"root": "/spinor/"
+				}
+			}
+		},
+		"...": {
+			"error": "File module unsupported"
+		}
+	}
+}

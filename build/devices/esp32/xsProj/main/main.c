@@ -2,17 +2,17 @@
  * Copyright (c) 2016-2017  Moddable Tech, Inc.
  *
  *   This file is part of the Moddable SDK Runtime.
- * 
+ *
  *   The Moddable SDK Runtime is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU Lesser General Public License as published by
  *   the Free Software Foundation, either version 3 of the License, or
  *   (at your option) any later version.
- * 
+ *
  *   The Moddable SDK Runtime is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
- * 
+ *
  *   You should have received a copy of the GNU Lesser General Public License
  *   along with the Moddable SDK Runtime.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -60,7 +60,7 @@ static xsMachine *gThe;		// the main XS virtual machine running
 
 /*
 	xsbug IP address
-		
+
 	IP address either:
 		0,0,0,0 - no xsbug connection
 		127,0,0,7 - xsbug over serial
@@ -212,8 +212,15 @@ uint8_t ESP_setBaud(int baud) {
 void app_main() {
 	modPrelaunch();
 
-	esp_log_level_set("wifi", CONFIG_LOG_DEFAULT_LEVEL);
-
+    esp_log_level_set("*", ESP_LOG_NONE);        // set all components to NONE level
+	esp_log_level_set("wifi", ESP_LOG_INFO);
+#ifdef xsDebug
+	esp_log_level_set("spi_master", ESP_LOG_DEBUG);
+	esp_log_level_set("sdspi_host", ESP_LOG_DEBUG);
+	esp_log_level_set("sdspi_transaction", ESP_LOG_DEBUG);
+	esp_log_level_set("sdmmc_cmd", ESP_LOG_DEBUG);
+	esp_log_level_set("sdmmc_sd", ESP_LOG_VERBOSE);
+#endif
 	ESP_ERROR_CHECK(nvs_flash_init());
 #if CONFIG_BT_ENABLED
     ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));

@@ -2,17 +2,17 @@
  * Copyright (c) 2018  Moddable Tech, Inc.
  *
  *   This file is part of the Moddable SDK Runtime.
- * 
+ *
  *   The Moddable SDK Runtime is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU Lesser General Public License as published by
  *   the Free Software Foundation, either version 3 of the License, or
  *   (at your option) any later version.
- * 
+ *
  *   The Moddable SDK Runtime is distributed in the hope that it will be useful,
  *   but WITHOUT ANY WARRANTY; without even the implied warranty of
  *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *   GNU Lesser General Public License for more details.
- * 
+ *
  *   You should have received a copy of the GNU Lesser General Public License
  *   along with the Moddable SDK Runtime.  If not, see <http://www.gnu.org/licenses/>.
  *
@@ -263,7 +263,7 @@ void xs_audioout_destructor(void *data)
 #elif defined(_WIN32)
 	if (NULL != out->dSBuffer)
 		releaseDirectSoundBuffer(out);
-	if (NULL != out->dS) 
+	if (NULL != out->dS)
 		IDirectSound8_Release(out->dS);
 	if (out->hWnd)
 		DestroyWindow(out->hWnd);
@@ -538,8 +538,19 @@ void xs_audioout_enqueue(xsMachine *the)
 						samplesToUse = xsmcToInteger(xsArg(5));
 				}
 			}
+			if (xsReferenceType == xsmcTypeOf(xsArg(2)) && xsmcIsInstanceOf(xsArg(2), xsArrayBufferPrototype)) {
+				// uint bLen = xsGetArrayBufferLength(xsArg(2));
+				// uint8_t aBuff[bLen];
+				// if (sizeof(aBuff) != bLen) {
+				// 	xsUnknownError("length must be %d bytes (%d)", bLen, sizeof(aBuff));
+				// }
+				// xsmcGetArrayBufferData(xsArg(2), 0, aBuff, bLen);
+				// buffer = aBuff;
+				buffer = xsmcToArrayBuffer(xsArg(2));
+			} else {
+				buffer = xsmcGetHostData(xsArg(2));
+			}
 
-			buffer = xsmcGetHostData(xsArg(2));
 			if (kind == kKindSamples) {
 				if (('m' != c_read8(buffer + 0)) || ('a' != c_read8(buffer + 1)) || (1 != c_read8(buffer + 2)))
 					xsUnknownError("bad header");
@@ -550,7 +561,7 @@ void xs_audioout_enqueue(xsMachine *the)
 				sampleFormat = c_read8(buffer + 7);
 				bufferSamples = c_read32(buffer + 8);
 				if ((bitsPerSample != out->bitsPerSample) || (sampleRate != out->sampleRate) || (numChannels != out->numChannels))
-					xsUnknownError("format doesn't match output");
+					xsUnknownError("format doesn't match output (%d: %d, %d: %d, %d: %d)", bitsPerSample, out->bitsPerSample, sampleRate, out->sampleRate, numChannels, out->numChannels);
 				if ((kSampleFormatUncompressed != sampleFormat) && (kSampleFormatIMA != sampleFormat))
 					xsUnknownError("unsupported compression");
 
@@ -568,7 +579,7 @@ void xs_audioout_enqueue(xsMachine *the)
 
 				sampleFormat = kSampleFormatUncompressed;
 			}
-			
+
 #if defined(__APPLE__)
 			pthread_mutex_lock(&out->mutex);
 #elif defined(_WIN32)
@@ -578,7 +589,7 @@ void xs_audioout_enqueue(xsMachine *the)
 #elif defined(__ets__)
 			modCriticalSectionBegin();
 #endif
-			
+
 			element = &out->stream[stream].element[out->stream[stream].elementCount];
 			element->position = 0;
 			element->repeat = repeat;
@@ -646,12 +657,6 @@ void xs_audioout_enqueue(xsMachine *the)
 				}
 
 #if defined(__APPLE__)
-				invokeCallbacks(NULL, out);
-#elif ESP || defined(__ets__) || defined(_WIN32)
-				deliverCallbacks(the, out, NULL, 0);
-#endif
-
-#if defined(__APPLE__)
 				pthread_mutex_unlock(&out->mutex);
 #elif defined(_WIN32)
 				LeaveCriticalSection(&out->cs);
@@ -659,6 +664,12 @@ void xs_audioout_enqueue(xsMachine *the)
 				xSemaphoreGive(out->mutex);
 #elif defined(__ets__)
 				modCriticalSectionEnd();
+#endif
+
+#if defined(__APPLE__)
+				invokeCallbacks(NULL, out);
+#elif ESP || defined(__ets__) || defined(_WIN32)
+				deliverCallbacks(the, out, NULL, 0);
 #endif
 		} break;
 

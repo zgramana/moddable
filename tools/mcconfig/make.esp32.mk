@@ -2,17 +2,17 @@
 # Copyright (c) 2016-2018  Moddable Tech, Inc.
 #
 #   This file is part of the Moddable SDK Tools.
-# 
+#
 #   The Moddable SDK Tools is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
 #   the Free Software Foundation, either version 3 of the License, or
 #   (at your option) any later version.
-# 
+#
 #   The Moddable SDK Tools is distributed in the hope that it will be useful,
 #   but WITHOUT ANY WARRANTY; without even the implied warranty of
 #   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #   GNU General Public License for more details.
-# 
+#
 #   You should have received a copy of the GNU General Public License
 #   along with the Moddable SDK Tools.  If not, see <http://www.gnu.org/licenses/>.
 #
@@ -63,6 +63,7 @@ INC_DIRS = \
  	$(IDF_PATH)/components/esp32/include \
  	$(IDF_PATH)/components/esp_event/include \
  	$(IDF_PATH)/components/esp_ringbuf/include \
+ 	$(IDF_PATH)/components/fatfs/src \
  	$(IDF_PATH)/components/freertos \
  	$(IDF_PATH)/components/freertos/include \
  	$(IDF_PATH)/components/freertos/include/freertos \
@@ -75,6 +76,7 @@ INC_DIRS = \
  	$(IDF_PATH)/components/mbedtls/include \
  	$(IDF_PATH)/components/newlib/include \
  	$(IDF_PATH)/components/newlib/platform_include \
+	$(IDF_PATH)/components/sdmmc/include \
  	$(IDF_PATH)/components/soc/esp32/include \
  	$(IDF_PATH)/components/soc/esp32/include/soc \
  	$(IDF_PATH)/components/soc/include \
@@ -82,8 +84,9 @@ INC_DIRS = \
  	$(IDF_PATH)/components/spi_flash/include \
  	$(IDF_PATH)/components/tcpip_adapter \
  	$(IDF_PATH)/components/tcpip_adapter/include \
- 	$(IDF_PATH)/components/vfs/include
-    
+ 	$(IDF_PATH)/components/vfs/include \
+	$(IDF_PATH)/components/wear_levelling/include
+
 XS_OBJ = \
 	$(LIB_DIR)/xsHost.c.o \
 	$(LIB_DIR)/xsPlatform.c.o \
@@ -235,7 +238,7 @@ MEM_USAGE = \
 
 VPATH += $(SDK_DIRS) $(XS_DIRS)
 
-.PHONY: all	
+.PHONY: all
 
 PARTITIONS_FILE ?= $(PROJ_DIR_TEMPLATE)/partitions.csv
 
@@ -257,8 +260,8 @@ ifeq ($(DEBUG),1)
 		DO_LAUNCH = bash -c "serial2xsbug `grep ^CONFIG_ESPTOOLPY_PORT $(PROJ_DIR)/sdkconfig | grep -o '"[^"]*"' | tr -d '"'` $(DEBUGGER_SPEED) 8N1"
 	endif
 else
-	KILL_SERIAL_2_XSBUG = 
-	DO_XSBUG = 
+	KILL_SERIAL_2_XSBUG =
+	DO_XSBUG =
 	DO_LAUNCH = cd $(PROJ_DIR); IDF_BUILD_DIR=$(IDF_BUILD_DIR) SDKCONFIG_DEFAULTS=$(SDKCONFIG_FILE) DEBUGGER_SPEED=$(DEBUGGER_SPEED) make monitor
 endif
 
@@ -299,8 +302,8 @@ $(SDKCONFIG_H): $(SDKCONFIG_FILE)
 $(LIB_DIR):
 	mkdir -p $(LIB_DIR)
 	echo "typedef struct { const char *date, *time, *src_version, *env_version;} _tBuildInfo; extern _tBuildInfo _BuildInfo;" > $(LIB_DIR)/buildinfo.h
-	
-$(BIN_DIR)/xs_esp32.a: $(SDK_OBJ) $(XS_OBJ) $(TMP_DIR)/mc.xs.c.o $(TMP_DIR)/mc.resources.c.o $(OBJECTS) 
+
+$(BIN_DIR)/xs_esp32.a: $(SDK_OBJ) $(XS_OBJ) $(TMP_DIR)/mc.xs.c.o $(TMP_DIR)/mc.resources.c.o $(OBJECTS)
 	@echo "# ld xs_esp.bin"
 	echo '#include "buildinfo.h"' > $(LIB_DIR)/buildinfo.c
 	echo '_tBuildInfo _BuildInfo = {"$(BUILD_DATE)","$(BUILD_TIME)","$(SRC_GIT_VERSION)","$(ESP_GIT_VERSION)"};' >> $(LIB_DIR)/buildinfo.c
@@ -337,7 +340,7 @@ $(LIB_DIR)/%.c.o: %.c
 $(TMP_DIR)/mc.%.c.o: $(TMP_DIR)/mc.%.c
 	@echo "# cc" $(<F) "(slots in flash)"
 	$(CC) $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) $< -o $@
-	
+
 $(TMP_DIR)/mc.xs.c: $(MODULES) $(MANIFEST)
 	@echo "# xsl modules"
 	$(XSL) -b $(MODULES_DIR) -o $(TMP_DIR) $(PRELOADS) $(STRIPS) $(CREATION) $(MODULES)
@@ -345,7 +348,7 @@ $(TMP_DIR)/mc.xs.c: $(MODULES) $(MANIFEST)
 $(TMP_DIR)/mc.resources.c: $(DATA) $(RESOURCES) $(MANIFEST)
 	@echo "# mcrez resources"
 	$(MCREZ) $(DATA) $(RESOURCES) -o $(TMP_DIR) -p esp32 -r mc.resources.c
-	
+
 MAKEFLAGS += $(MAKEFLAGS_JOBS)
 ifneq ($(VERBOSE),1)
 MAKEFLAGS += --silent
