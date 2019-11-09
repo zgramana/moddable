@@ -539,13 +539,6 @@ void xs_audioout_enqueue(xsMachine *the)
 				}
 			}
 			if (xsReferenceType == xsmcTypeOf(xsArg(2)) && xsmcIsInstanceOf(xsArg(2), xsArrayBufferPrototype)) {
-				// uint bLen = xsGetArrayBufferLength(xsArg(2));
-				// uint8_t aBuff[bLen];
-				// if (sizeof(aBuff) != bLen) {
-				// 	xsUnknownError("length must be %d bytes (%d)", bLen, sizeof(aBuff));
-				// }
-				// xsmcGetArrayBufferData(xsArg(2), 0, aBuff, bLen);
-				// buffer = aBuff;
 				buffer = xsmcToArrayBuffer(xsArg(2));
 			} else {
 				buffer = xsmcGetHostData(xsArg(2));

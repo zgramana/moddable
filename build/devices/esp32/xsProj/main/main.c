@@ -220,6 +220,7 @@ void app_main() {
 	esp_log_level_set("sdspi_transaction", ESP_LOG_DEBUG);
 	esp_log_level_set("sdmmc_cmd", ESP_LOG_DEBUG);
 	esp_log_level_set("sdmmc_sd", ESP_LOG_VERBOSE);
+	esp_log_level_set("I2S", ESP_LOG_VERBOSE);
 #endif
 	ESP_ERROR_CHECK(nvs_flash_init());
 #if CONFIG_BT_ENABLED
